@@ -1,0 +1,180 @@
+import { ItemView, Platform, setIcon, setTooltip, type WorkspaceLeaf } from 'obsidian';
+import type { Outline, OutlineItem } from './outline';
+import { isPro } from './pro';
+import type EmbedOutlinePlugin from './main';
+
+export const VIEW_TYPE = 'embed-outline';
+
+const ICONS: Partial<Record<OutlineItem['kind'], string>> = {
+	embed: 'file-text',
+	callout: 'quote',
+	'list-heading': 'list',
+	broken: 'alert-triangle',
+	cycle: 'repeat',
+};
+
+const fmt = (n: number): string => n.toLocaleString();
+
+/** Short display name of an embed row: the note name and the heading or block part. */
+export function embedLabel(item: OutlineItem): string {
+	const link = item.link ?? item.text;
+	const i = link.indexOf('#');
+	const note = (i < 0 ? link : link.slice(0, i)).split('/').pop() ?? link;
+	const sub = i < 0 ? '' : link.slice(i + 1).replace(/#/g, ' > ');
+	if (!note) return sub;
+	return sub ? `${note} > ${sub}` : note;
+}
+
+/** Text of a broken or cycle row. */
+export function brokenLabel(item: OutlineItem): string {
+	if (item.kind === 'cycle') return `Embeds itself: ${embedLabel(item)}`;
+	const what = item.missing === 'heading' ? 'No such heading' : item.missing === 'block' ? 'No such block' : 'No such note';
+	return `${what}: ${embedLabel(item)}`;
+}
+
+export class EmbedOutlineView extends ItemView {
+	private readonly plugin: EmbedOutlinePlugin;
+	/** Keys of rows the user folded. */
+	private readonly folded = new Set<string>();
+	private outline: Outline | null = null;
+	private message = '';
+
+	constructor(leaf: WorkspaceLeaf, plugin: EmbedOutlinePlugin) {
+		super(leaf);
+		this.plugin = plugin;
+	}
+
+	getViewType(): string {
+		return VIEW_TYPE;
+	}
+
+	getDisplayText(): string {
+		return 'Embed outline';
+	}
+
+	getIcon(): string {
+		return 'list-tree';
+	}
+
+	async onOpen(): Promise<void> {
+		this.contentEl.addClass('embed-outline');
+		this.draw();
+		this.plugin.scheduleRefresh(0);
+		await Promise.resolve();
+	}
+
+	async onClose(): Promise<void> {
+		this.contentEl.empty();
+		await Promise.resolve();
+	}
+
+	/** Shows an outline, or a message when there is none. */
+	show(outline: Outline | null, message = ''): void {
+		if (outline?.path !== this.outline?.path) this.folded.clear();
+		this.outline = outline;
+		this.message = message;
+		this.draw();
+	}
+
+	current(): Outline | null {
+		return this.outline;
+	}
+
+	private draw(): void {
+		const el = this.contentEl;
+		el.empty();
+		const o = this.outline;
+		if (!o) {
+			el.createDiv({ cls: 'embed-outline-empty', text: this.message || 'Open a note to see its outline.' });
+			return;
+		}
+		this.drawHeader(el, o);
+		if (o.items.length === 0) {
+			el.createDiv({ cls: 'embed-outline-empty', text: 'This note has no headings, callouts or embedded notes.' });
+			return;
+		}
+		if (!isPro() && o.locked > 0) {
+			const n = o.locked;
+			el.createDiv({ cls: 'embed-outline-hint', text: `${n} ${n === 1 ? 'embed sits' : 'embeds sit'} inside embedded notes. Pro opens them.` });
+		}
+		if (o.truncated) el.createDiv({ cls: 'embed-outline-hint', text: 'This outline is very long, so the last rows are left out.' });
+		const tree = el.createDiv({ cls: 'embed-outline-tree', attr: { role: 'tree' } });
+		this.drawItems(tree, o.items, '');
+	}
+
+	private drawHeader(el: HTMLElement, o: Outline): void {
+		const head = el.createDiv({ cls: 'embed-outline-header' });
+		const name = o.path.split('/').pop()?.replace(/\.md$/, '') ?? o.path;
+		head.createDiv({ cls: 'embed-outline-title', text: name });
+		const stats: string[] = [`${o.embeds} ${o.embeds === 1 ? 'embed' : 'embeds'}`];
+		if (o.words !== undefined) stats.push(`${fmt(o.words)} words`);
+		if (o.broken > 0) stats.push(`${o.broken} broken`);
+		head.createDiv({ cls: 'embed-outline-stats', text: stats.join(', ') });
+		const buttons = head.createDiv({ cls: 'embed-outline-buttons' });
+		const fold = buttons.createEl('button', { cls: 'clickable-icon', attr: { 'aria-label': 'Fold all' } });
+		setIcon(fold, 'chevrons-down-up');
+		fold.addEventListener('click', () => this.foldAll());
+		const copy = buttons.createEl('button', { cls: 'clickable-icon', attr: { 'aria-label': 'Copy as a Markdown list (pro feature)' } });
+		setIcon(copy, 'copy');
+		copy.addEventListener('click', () => void this.plugin.copyOutline());
+	}
+
+	private foldAll(): void {
+		const o = this.outline;
+		if (!o) return;
+		const keys: string[] = [];
+		const walk = (items: readonly OutlineItem[], prefix: string): void => {
+			items.forEach((it, i) => {
+				const key = `${prefix}${i}`;
+				if (it.children.length) keys.push(key);
+				walk(it.children, `${key}.`);
+			});
+		};
+		walk(o.items, '');
+		const allFolded = keys.every((k) => this.folded.has(k));
+		this.folded.clear();
+		if (!allFolded) for (const k of keys.filter((k) => !k.includes('.'))) this.folded.add(k);
+		this.draw();
+	}
+
+	private drawItems(parent: HTMLElement, items: readonly OutlineItem[], prefix: string): void {
+		items.forEach((it, i) => {
+			const key = `${prefix}${i}`;
+			const node = parent.createDiv({ cls: 'embed-outline-item', attr: { 'data-kind': it.kind, role: 'treeitem' } });
+			const row = node.createDiv({ cls: 'embed-outline-row', attr: { tabindex: '0' } });
+			const folded = this.folded.has(key);
+			if (it.children.length) {
+				node.setAttr('aria-expanded', folded ? 'false' : 'true');
+				const toggle = row.createSpan({ cls: 'embed-outline-fold' });
+				setIcon(toggle, folded ? 'chevron-right' : 'chevron-down');
+				toggle.addEventListener('click', (evt) => {
+					evt.stopPropagation();
+					if (this.folded.has(key)) this.folded.delete(key);
+					else this.folded.add(key);
+					this.draw();
+				});
+			} else {
+				row.createSpan({ cls: 'embed-outline-fold embed-outline-spacer' });
+			}
+			const icon = it.locked ? 'lock' : ICONS[it.kind];
+			if (icon) setIcon(row.createSpan({ cls: 'embed-outline-icon' }), icon);
+			if (it.kind === 'callout' && it.calloutType) row.setAttr('data-callout', it.calloutType);
+			const text = it.kind === 'embed' ? embedLabel(it) : it.kind === 'broken' || it.kind === 'cycle' ? brokenLabel(it) : it.text;
+			row.createSpan({ cls: 'embed-outline-text', text });
+			if (it.words !== undefined) row.createSpan({ cls: 'embed-outline-words', text: fmt(it.words) });
+			if (it.locked) setTooltip(row, 'Pro opens embeds inside embedded notes.');
+			else if (it.depth > 0) setTooltip(row, `From ${it.path.replace(/\.md$/, '')}. ${Platform.isMacOS ? 'Cmd' : 'Ctrl'}+click opens that note.`);
+			const go = (evt: MouseEvent | KeyboardEvent): void => {
+				void this.plugin.jump(it, evt.metaKey || evt.ctrlKey);
+			};
+			row.addEventListener('click', go);
+			row.addEventListener('keydown', (evt) => {
+				if (evt.key === 'Enter' || evt.key === ' ') {
+					evt.preventDefault();
+					go(evt);
+				}
+			});
+			if (it.children.length && !folded) this.drawItems(node.createDiv({ cls: 'embed-outline-children', attr: { role: 'group' } }), it.children, `${key}.`);
+		});
+	}
+}
