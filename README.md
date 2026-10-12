@@ -14,7 +14,7 @@ The outline of the note and of the notes it embeds is free. Pro adds embeds insi
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/embedded.png" alt="A manuscript note on the left and, on the right, an outline with a row for each embedded chapter and the chapter headings under it" width="720">
 
-Each embed gets a row with the note name and its headings below it. The row sits under the heading that holds the embed.
+Each embedded note gets a row with the note name and its headings below it. The row sits under the heading that holds the embed.
 
 A section embed, such as `![[Chapter 4#The storm]]` or `![[#Summary]]`, shows only that section's headings. A block embed such as `![[Note#^quote]]` gets a row with no headings below it. Images, PDFs and other files are left out.
 
@@ -78,7 +78,7 @@ When Embed Outline is in the community directory, open Settings, then Community 
 
 To install by hand, download `main.js`, `manifest.json` and `styles.css` from the latest release. Put them in `<vault>/.obsidian/plugins/embed-outline/`. Reload the list of community plugins, then turn on Embed Outline.
 
-It needs Obsidian 1.13.4 or newer. It was tested on desktop with Obsidian 1.13.4 and 1.14.4. It uses no desktop-only features, so it also runs on mobile.
+It needs Obsidian 1.13.4 or newer. It was tested on desktop with Obsidian 1.13.4 and 1.14.4. It was not tested on mobile.
 
 ## Usage
 
@@ -87,7 +87,7 @@ It needs Obsidian 1.13.4 or newer. It was tested on desktop with Obsidian 1.13.4
 3. Select the Embed outline tab, or run the command "Open the outline panel".
 4. Click a row to go to it.
 
-The outline follows the note that you open last. It updates about a third of a second after you change that note or any note that it embeds.
+The outline follows the note that you open last. It updates shortly after you change that note or any note that it embeds.
 
 ## Pro
 
@@ -115,11 +115,11 @@ A negative sponsorship answer turns Pro off. The free outline keeps working.
 
 ### Does it replace the core Outline?
 
-No. Both can be open at the same time. Embed Outline only reads your notes. It never changes a note.
+No. Both can be open at the same time. Embed Outline only reads your notes. It does not change them.
 
 ### Is it slow on a long book?
 
-It reads the open note and the notes it embeds, from the cache of the app, and nothing else in the vault. It stops at 400 notes and 5,000 rows, so a loop of notes that embed each other cannot freeze the app.
+It reads the open note and the notes it embeds, from the cache of the app, and nothing else in the vault. It stops at 400 notes and 5,000 rows, and word counts stop after 20,000 embedded parts. A line at the top tells you when the row or word limit applies.
 
 ### Why does a row say "No such heading" when the embed shows in the note?
 

@@ -1,5 +1,11 @@
 # embed-outline
 
+## 1.1.1
+
+### Patch Changes
+
+- 5bdbf85: Limit word counts when many notes embed each other, show a section embed of the first heading of a note, and make Markdown copy links use the heading as written.
+
 ## 1.1.0
 
 ### Minor Changes

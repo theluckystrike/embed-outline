@@ -69,6 +69,8 @@ export interface OutlineOptions {
 export const MAX_DEPTH = 5;
 /** Upper bound on rows, so a vault of notes that embed each other cannot freeze the panel. */
 export const MAX_ITEMS = 5000;
+/** Upper bound on embedded parts that the word counts read, so notes that embed each other cannot freeze the panel. */
+export const MAX_WORD_STEPS = 20000;
 
 export type ItemKind = 'heading' | 'callout' | 'list-heading' | 'embed' | 'broken' | 'cycle';
 
@@ -82,6 +84,8 @@ export interface OutlineItem {
 	line: number;
 	/** Line in the open note to scroll to: the row's own line, or the line of the top-level embed that shows it. */
 	rootLine: number;
+	/** Heading rows: the heading as written in the note, for links. */
+	heading?: string;
 	/** Heading level 1-6; 0 for other rows. */
 	level: number;
 	/** 0 = the open note, 1 = a note embedded in it, and so on. */
@@ -112,7 +116,7 @@ export interface Outline {
 	locked: number;
 	/** Every note the outline read, for live updates. */
 	paths: string[];
-	/** True when MAX_ITEMS stopped the build. */
+	/** True when MAX_ITEMS stopped the build or MAX_WORD_STEPS stopped a word count. */
 	truncated: boolean;
 }
 
@@ -183,6 +187,11 @@ export function sectionEnd(note: NoteData, i: number, limit = note.lines.length)
 	return limit;
 }
 
+/** One embedded part of a note. Two parts with the same start line and a different end are different parts. */
+function partKey(path: string, start: number, end: number): string {
+	return `${path}#${start}-${end}`;
+}
+
 class Builder {
 	readonly paths = new Set<string>();
 	count = 0;
@@ -190,6 +199,7 @@ class Builder {
 	broken = 0;
 	locked = 0;
 	truncated = false;
+	private wordSteps = 0;
 	private readonly wordMemo = new Map<string, number>();
 
 	constructor(
@@ -214,7 +224,7 @@ class Builder {
 			if (e.kind === 'heading') {
 				const h = e.heading!;
 				while (stack.length > 0 && stack[stack.length - 1]!.level >= h.level) stack.pop();
-				const item = this.item({ kind: 'heading', text: plainInline(h.text), path: note.path, line: h.line, rootLine, level: h.level, depth });
+				const item = this.item({ kind: 'heading', text: plainInline(h.text), path: note.path, line: h.line, rootLine, level: h.level, depth, heading: h.text });
 				if (this.opts.words) {
 					const idx = note.headings.indexOf(h);
 					item.words = this.words(note, h.line, sectionEnd(note, idx, end), depth, chain);
@@ -261,7 +271,7 @@ class Builder {
 			const missing = t.kind === 'missing-note' ? 'note' : t.sub;
 			return this.item({ kind: 'broken', text: plainInline(`[[${e.link}]]`), path: note.path, line: e.line, rootLine, level: 0, depth, link: e.link, missing });
 		}
-		const key = `${t.path}#${t.start}`;
+		const key = partKey(t.path, t.start, t.end);
 		// The chain holds the open note and every embed above this one: meeting one of them again is a loop.
 		if (chain.includes(key)) {
 			if (!this.opts.broken) return null;
@@ -289,11 +299,15 @@ class Builder {
 		const hit = this.wordMemo.get(memoKey);
 		if (hit !== undefined) return hit;
 		let total = wordsIn(note.lines, start, end);
+		if (++this.wordSteps > MAX_WORD_STEPS) {
+			this.truncated = true;
+			return total;
+		}
 		for (const m of note.embeds) {
 			if (m.line < start || m.line >= end) continue;
 			const t = this.src.resolve(m.link, note.path);
 			if (t.kind !== 'note' || depth + 1 > this.depthLimit) continue;
-			const key = `${t.path}#${t.start}`;
+			const key = partKey(t.path, t.start, t.end);
 			if (chain.includes(key)) continue;
 			const target = this.src.note(t.path);
 			if (target) total += this.words(target, t.start, t.end, depth + 1, [...chain, key]);
@@ -309,9 +323,13 @@ export function buildOutline(rootPath: string, src: OutlineSource, opts: Outline
 	const b = new Builder(src, opts, depthLimit);
 	const root = src.note(rootPath);
 	if (!root) return { path: rootPath, items: [], embeds: 0, broken: 0, locked: 0, paths: [rootPath], truncated: false };
-	const items = b.range(root, 0, root.lines.length, 0, null, [`${rootPath}#0`]);
+	const chain = [partKey(rootPath, 0, root.lines.length)];
+	const items = b.range(root, 0, root.lines.length, 0, null, chain);
 	const out: Outline = { path: rootPath, items, embeds: b.embeds, broken: b.broken, locked: b.locked, paths: [...b.paths], truncated: b.truncated };
-	if (opts.words) out.words = b.words(root, 0, root.lines.length, 0, [`${rootPath}#0`]);
+	if (opts.words) {
+		out.words = b.words(root, 0, root.lines.length, 0, chain);
+		out.truncated = b.truncated;
+	}
 	return out;
 }
 
@@ -383,7 +401,7 @@ export function toMarkdownList(outline: Outline, opts: MarkdownListOptions): str
 			const pad = '\t'.repeat(indent);
 			const count = opts.words && it.words !== undefined ? ` (${it.words.toLocaleString('en-US')} words)` : '';
 			if (it.kind === 'heading') {
-				const target = it.text.replace(LINK_UNSAFE, ' ').replace(/\s+/g, ' ').trim();
+				const target = (it.heading ?? it.text).replace(LINK_UNSAFE, ' ').replace(/\s+/g, ' ').trim();
 				lines.push(`${pad}- [[${opts.linkText(it.path)}#${target}|${it.text.replace(/[|\]]/g, ' ').trim()}]]${count}`);
 			} else if (it.kind === 'embed') {
 				lines.push(`${pad}- [[${it.link ?? ''}]]${count}`);

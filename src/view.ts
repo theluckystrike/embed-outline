@@ -152,7 +152,7 @@ export class EmbedOutlineView extends ItemView {
 			const n = o.locked;
 			el.createDiv({ cls: 'embed-outline-hint', text: `${n} ${n === 1 ? 'embed sits' : 'embeds sit'} inside embedded notes. Pro opens them.` });
 		}
-		if (o.truncated) el.createDiv({ cls: 'embed-outline-hint', text: 'This outline is very long, so the last rows are left out.' });
+		if (o.truncated) el.createDiv({ cls: 'embed-outline-hint', text: 'This outline is very long, so some rows or embedded word counts are left out.' });
 		const tree = el.createDiv({ cls: 'embed-outline-tree', attr: { role: 'tree' } });
 		this.drawItems(tree, filtered.items, '');
 	}

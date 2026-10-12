@@ -1,7 +1,7 @@
 {
 	"id": "embed-outline",
 	"name": "Embed Outline",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"minAppVersion": "1.13.4",
 	"description": "Shows the headings of embedded notes and callout titles in one outline, nested where each note is embedded.",
 	"author": "Michael Lip",
