@@ -2,7 +2,7 @@
  "slug": "embed-outline",
  "module": "embed-outline/src/outline",
  "function": "buildOutline",
- "note": "args = [notes: path -> Markdown text, the open note path, options {callouts, listHeadings, maxDepth, words, broken}]. Notes are read by tests/scan.ts, which finds headings, embeds, callouts, list items and block IDs as the app's metadata cache does (test/e2e/outline.e2e.ts checks the same rules in the app). expected.lines = outlineLines(items): one row per line, two spaces per level, H<level> heading, E embed, C callout, L<level> heading in a list item, ! broken embed, @ loop; Nw = words; @N = line in the open note that a click scrolls to.",
+ "note": "args = [notes: path -> Markdown text, the open note path, options {callouts, listHeadings, maxDepth, words, broken}]. Notes are read by tests/scan.ts, which finds headings, embeds, callouts, list items and block IDs as the app's metadata cache does (test/e2e/outline.e2e.ts checks the same rules in the app). expected.lines = outlineLines(items): one row per line, two spaces per level, H<level> heading, E embed, C callout, L<level> heading in a list item, ! broken embed, @ loop; Nw = words; @N = line in the open note that a click scrolls to. An optional fourth argument is the search query. For these cases, filterOutline runs after buildOutline; expected.lines holds the filtered rows and expected.matches holds the number of matching rows without parent rows.",
  "cases": [
   {
    "name": "own headings only, nested by level",
@@ -771,6 +771,174 @@
     "embeds": 0,
     "broken": 0,
     "locked": 0
+   }
+  },
+  {
+   "name": "search keeps the parents of an embedded heading",
+   "args": [
+    {
+     "Book.md": "# Book\n![[Chapter]]\n# Other\n",
+     "Chapter.md": "# Chapter\n## The ferry\n## Night watch\n"
+    },
+    "Book.md",
+    {
+     "callouts": true,
+     "listHeadings": true,
+     "maxDepth": 1,
+     "words": false,
+     "broken": false
+    },
+    " FERRY "
+   ],
+   "expected": {
+    "lines": [
+     "H1 Book @0",
+     "  E Chapter @1",
+     "    H1 Chapter @1",
+     "      H2 The ferry @1"
+    ],
+    "embeds": 1,
+    "broken": 0,
+    "locked": 0,
+    "matches": 1
+   }
+  },
+  {
+   "name": "search leaves out unrelated children of a matching parent",
+   "args": [
+    {
+     "Book.md": "# Book\n![[Chapter]]\n# Other\n",
+     "Chapter.md": "# Chapter\n## The ferry\n## Night watch\n"
+    },
+    "Book.md",
+    {
+     "callouts": true,
+     "listHeadings": true,
+     "maxDepth": 1,
+     "words": false,
+     "broken": false
+    },
+    "Book"
+   ],
+   "expected": {
+    "lines": [
+     "H1 Book @0"
+    ],
+    "embeds": 1,
+    "broken": 0,
+    "locked": 0,
+    "matches": 1
+   }
+  },
+  {
+   "name": "search returns every repeated matching row",
+   "args": [
+    {
+     "Book.md": "# Book\n![[Chapter]]\n# Other\n",
+     "Chapter.md": "# Chapter\n## The ferry\n## Night watch\n"
+    },
+    "Book.md",
+    {
+     "callouts": true,
+     "listHeadings": true,
+     "maxDepth": 1,
+     "words": false,
+     "broken": false
+    },
+    "chapter"
+   ],
+   "expected": {
+    "lines": [
+     "H1 Book @0",
+     "  E Chapter @1",
+     "    H1 Chapter @1"
+    ],
+    "embeds": 1,
+    "broken": 0,
+    "locked": 0,
+    "matches": 2
+   }
+  },
+  {
+   "name": "search treats punctuation as literal text",
+   "args": [
+    {
+     "Book.md": "# Book\n![[Chapter]]\n# Other\n",
+     "Chapter.md": "# Chapter\n## The ferry\n## Night watch\n"
+    },
+    "Book.md",
+    {
+     "callouts": true,
+     "listHeadings": true,
+     "maxDepth": 1,
+     "words": false,
+     "broken": false
+    },
+    ".*"
+   ],
+   "expected": {
+    "lines": [],
+    "embeds": 1,
+    "broken": 0,
+    "locked": 0,
+    "matches": 0
+   }
+  },
+  {
+   "name": "search with whitespace restores all rows",
+   "args": [
+    {
+     "Book.md": "# Book\n![[Chapter]]\n# Other\n",
+     "Chapter.md": "# Chapter\n## The ferry\n## Night watch\n"
+    },
+    "Book.md",
+    {
+     "callouts": true,
+     "listHeadings": true,
+     "maxDepth": 1,
+     "words": false,
+     "broken": false
+    },
+    "   "
+   ],
+   "expected": {
+    "lines": [
+     "H1 Book @0",
+     "  E Chapter @1",
+     "    H1 Chapter @1",
+     "      H2 The ferry @1",
+     "      H2 Night watch @1",
+     "H1 Other @2"
+    ],
+    "embeds": 1,
+    "broken": 0,
+    "locked": 0,
+    "matches": 0
+   }
+  },
+  {
+   "name": "search has no rows for an absent label",
+   "args": [
+    {
+     "Book.md": "# Book\n![[Chapter]]\n# Other\n",
+     "Chapter.md": "# Chapter\n## The ferry\n## Night watch\n"
+    },
+    "Book.md",
+    {
+     "callouts": true,
+     "listHeadings": true,
+     "maxDepth": 1,
+     "words": false,
+     "broken": false
+    },
+    "absent"
+   ],
+   "expected": {
+    "lines": [],
+    "embeds": 1,
+    "broken": 0,
+    "locked": 0,
+    "matches": 0
    }
   }
  ]

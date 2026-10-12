@@ -122,6 +122,52 @@ describe(`${pluginId} in the real app`, function () {
 		expect(s.texts).toContain('Chapter 4 > The storm');
 	});
 
+	it('free search shows an embedded heading with its parent rows and keeps its jump target', async function () {
+		await browser.execute(() => {
+			const input = document.querySelector<HTMLInputElement>('.embed-outline-search input')!;
+			input.value = ' FERRY ';
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		const s = await waitFor((x) => x.rows === 5, 'search result and parent rows');
+		expect(s.texts).toEqual(['The Lighthouse Keeper', 'Part one', 'Chapter 1', 'Chapter 1: Arrival', 'The ferry']);
+		expect(linesOf(s)).toEqual(MANUSCRIPT_FREE);
+		await clickRow('The ferry');
+		await browser.waitUntil(async () => (await cursorLine()).line === 10, { timeout: 5000 });
+		await browser.execute(() => document.querySelector<HTMLButtonElement>('[aria-label="Clear outline search"]')!.click());
+		await waitFor((x) => x.rows === MANUSCRIPT_FREE.length, 'full outline after clear');
+	});
+
+	it('search opens a folded path and Escape restores the fold state', async function () {
+		await browser.execute(() => {
+			document.querySelector<HTMLButtonElement>('[aria-label="Fold all"]')!.click();
+			const input = document.querySelector<HTMLInputElement>('.embed-outline-search input')!;
+			input.value = 'ferry';
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		await waitFor((x) => x.texts.includes('The ferry'), 'folded match is visible');
+		await browser.execute(() => document.querySelector('.embed-outline-search input')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+		await waitFor((x) => x.rows === 1, 'fold state after Escape');
+		await browser.execute(() => document.querySelector<HTMLButtonElement>('[aria-label="Fold all"]')!.click());
+		await waitFor((x) => x.rows === MANUSCRIPT_FREE.length, 'all rows open again');
+	});
+
+	it('search shows no matches and clears on a note change', async function () {
+		await browser.execute(() => {
+			const input = document.querySelector<HTMLInputElement>('.embed-outline-search input')!;
+			input.value = 'no-such-row';
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		await waitFor((x) => x.rows === 0, 'no matches');
+		const status = await browser.execute(() => document.querySelector('.embed-outline-search-status')?.textContent);
+		expect(status).toBe('0 matches');
+		await obsidianPage.openFile(CHAPTER1);
+		await waitFor((x) => x.outline?.path === CHAPTER1 && x.rows > 0, 'search cleared for Chapter 1');
+		const query = await browser.execute(() => document.querySelector<HTMLInputElement>('.embed-outline-search input')?.value);
+		expect(query).toBe('');
+		await obsidianPage.openFile(MANUSCRIPT);
+		await waitFor((x) => x.rows === MANUSCRIPT_FREE.length, 'manuscript after search');
+	});
+
 	it('a click on an own heading moves the cursor to that heading', async function () {
 		await clickRow('Revision notes');
 		await browser.waitUntil(async () => (await cursorLine()).line === 27, { timeout: 5000, timeoutMsg: 'cursor did not move to line 27' });

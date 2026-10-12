@@ -21,6 +21,14 @@
 		"wait": 900
 	},
 	{
+		"feature": "search",
+		"caption": "Search for ferry to show the heading of an embedded chapter and its parent rows.",
+		"note": "Manuscript.md",
+		"eval": "(async () => { const p = app.plugins.plugins['embed-outline']; p.pro.signOut(); app.workspace.rightSplit.expand(); await p.activateView(); await new Promise((r) => setTimeout(r, 700)); const input = document.querySelector('.embed-outline-search input'); input.value = 'ferry'; input.dispatchEvent(new Event('input', { bubbles: true })); return 'ok'; })()",
+		"after": "document.querySelector('[aria-label=\"Clear outline search\"]')?.click(); 'ok'",
+		"wait": 900
+	},
+	{
 		"feature": "nested",
 		"caption": "Pro: the letter embedded in Chapter 2 opens one level deeper. Without Pro it shows as a locked row.",
 		"note": "Manuscript.md",

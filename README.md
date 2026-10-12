@@ -1,6 +1,6 @@
 # Embed Outline
 
-Embed Outline shows one outline for a note that is built from embeds. The core Outline lists only the headings of the note itself. When a note is mostly `![[Chapter 1]]`, `![[Chapter 2]]` and so on, the core Outline is almost empty. Embed Outline puts the headings of each embedded note under its embed, in the order you read them, and adds callout titles and headings that sit inside list items.
+Embed Outline shows one outline for a note and the notes it embeds. Each embedded note has its own row, with its headings below it. The outline also shows callout titles and headings in list items.
 
 Use it for a book or thesis kept as one note per chapter, or a project page that embeds meeting notes.
 
@@ -14,9 +14,9 @@ The outline of the note and of the notes it embeds is free. Pro adds embeds insi
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/embedded.png" alt="A manuscript note on the left and, on the right, an outline with a row for each embedded chapter and the chapter headings under it" width="720">
 
-Each embed gets a row with the name of the embedded note. Under it you see the headings of that note, with their own levels. The rows sit under the heading of your note that holds the embed, so "Part one" contains Chapter 1 and Chapter 2.
+Each embed gets a row with the note name and its headings below it. The row sits under the heading that holds the embed.
 
-An embed of one section, such as `![[Chapter 4#The storm]]`, shows that heading and the headings below it, and nothing else of the note. The same works for a section of the note itself, such as `![[#Summary]]`. A block embed such as `![[Note#^quote]]` gets a row with no headings under it. Images, PDFs and other files are left out, because they have no headings.
+A section embed, such as `![[Chapter 4#The storm]]` or `![[#Summary]]`, shows only that section's headings. A block embed such as `![[Note#^quote]]` gets a row with no headings below it. Images, PDFs and other files are left out.
 
 ### Jump to any row
 
@@ -36,6 +36,16 @@ A callout such as `> [!warning] Spring tides` shows as a row with its title, und
 
 A heading written inside a list item, such as `- ## Open questions`, is also a row. The app does not treat these as headings, so the core Outline never shows them. You can turn both off in the settings.
 
+### Search the outline
+
+<img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/search.png" alt="A search for ferry shows the matching heading in Chapter 1 and its parent rows" width="720">
+
+Type in "Search outline" to find a heading, callout title, list heading or embed name. Search is free and ignores case and spaces at the start and end. Punctuation is literal text. Search checks the row text that the panel shows.
+
+The panel shows each match and its parent rows. The count includes matches only. Folded paths open during search. Use the clear button or Escape to restore the full outline and its fold state. Fold controls are off during search.
+
+Click a result, or press Enter, to go to it. The query stays during updates and clears when you open another note. Search includes the deeper embeds that Pro opens. Word counts and the Markdown copy use the full outline.
+
 ### Nested embeds (Pro)
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/nested.png" alt="The outline with the letter that Chapter 2 embeds open one level deeper, with its two headings" width="720">
@@ -54,7 +64,7 @@ Links count as their visible text. Code, comments, front matter, URLs and callou
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/broken.png" alt="The end of the outline with a red row No such note: Acknowledgments under Back matter" width="720">
 
-Pro marks an embed whose note does not exist, whose heading is not in the note, or whose block ID is not in the note. It also marks an embed that ends up embedding itself, for example two notes that embed each other. The top of the panel counts them. Without Pro, these embeds are left out of the outline.
+Pro marks embeds with missing notes, headings or block IDs. It also marks loops, such as two notes that embed each other. The panel counts them. Without Pro, these embeds are left out.
 
 ### Copy as a Markdown list (Pro)
 
@@ -113,7 +123,7 @@ It reads the open note and the notes it embeds, from the cache of the app, and n
 
 ### Why does a row say "No such heading" when the embed shows in the note?
 
-The heading text in the embed and in the note must match after the app removes special characters such as `:` and `#`. The plugin asks the app to find the heading, so the row and the note agree. Check for a renamed heading.
+The heading text must match after the app removes special characters such as `:` and `#`. The plugin asks the app to find the heading. Check for a renamed heading.
 
 ## Payment, account and network
 
@@ -139,7 +149,7 @@ npm run build
 npm test
 ```
 
-The tests check 28 golden cases for the outline rules. An end-to-end test opens the sample manuscript in Obsidian and checks every row of the outline, the jumps and the Pro features.
+The tests check 34 golden cases for the outline and search rules. An end-to-end test opens the sample manuscript in Obsidian and checks the outline rows, search, jumps and Pro features.
 
 ## License
 

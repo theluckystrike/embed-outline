@@ -315,6 +315,28 @@ export function buildOutline(rootPath: string, src: OutlineSource, opts: Outline
 	return out;
 }
 
+/** Keep rows whose label contains the query and their parents. Do not change the source tree. */
+export function filterOutline(
+	items: readonly OutlineItem[],
+	query: string,
+	label: (row: OutlineItem) => string = (row) => row.text,
+): { items: OutlineItem[]; matches: number } {
+	const needle = query.trim().normalize('NFC').toLowerCase();
+	if (!needle) return { items: [...items], matches: 0 };
+	let matches = 0;
+	const walk = (rows: readonly OutlineItem[]): OutlineItem[] => {
+		const kept: OutlineItem[] = [];
+		for (const row of rows) {
+			const children = walk(row.children);
+			const match = label(row).normalize('NFC').toLowerCase().includes(needle);
+			if (match) matches++;
+			if (match || children.length) kept.push({ ...row, children });
+		}
+		return kept;
+	};
+	return { items: walk(items), matches };
+}
+
 const KIND_MARK: Record<ItemKind, string> = {
 	heading: 'H',
 	callout: 'C',
