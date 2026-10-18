@@ -1,5 +1,11 @@
 # embed-outline
 
+## 1.2.0
+
+### Minor Changes
+
+- 83c0c2a: Remember folds when switching between notes in an open panel. Keep folds when unrelated headings are inserted. Show a warning at the note read limit. Resolve copied nested embed links from the destination note.
+
 ## 1.1.2
 
 ### Patch Changes

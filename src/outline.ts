@@ -49,6 +49,8 @@ export type Target =
 	| { kind: 'missing-sub'; path: string; sub: 'heading' | 'block' };
 
 export interface OutlineSource {
+	/** The source stopped reading new notes at its limit. */
+	truncated?: boolean;
 	note(path: string): NoteData | null;
 	resolve(link: string, fromPath: string): Target;
 }
@@ -325,10 +327,10 @@ export function buildOutline(rootPath: string, src: OutlineSource, opts: Outline
 	if (!root) return { path: rootPath, items: [], embeds: 0, broken: 0, locked: 0, paths: [rootPath], truncated: false };
 	const chain = [partKey(rootPath, 0, root.lines.length)];
 	const items = b.range(root, 0, root.lines.length, 0, null, chain);
-	const out: Outline = { path: rootPath, items, embeds: b.embeds, broken: b.broken, locked: b.locked, paths: [...b.paths], truncated: b.truncated };
+	const out: Outline = { path: rootPath, items, embeds: b.embeds, broken: b.broken, locked: b.locked, paths: [...b.paths], truncated: b.truncated || src.truncated === true };
 	if (opts.words) {
 		out.words = b.words(root, 0, root.lines.length, 0, chain);
-		out.truncated = b.truncated;
+		out.truncated = b.truncated || src.truncated === true;
 	}
 	return out;
 }
@@ -404,7 +406,9 @@ export function toMarkdownList(outline: Outline, opts: MarkdownListOptions): str
 				const target = (it.heading ?? it.text).replace(LINK_UNSAFE, ' ').replace(/\s+/g, ' ').trim();
 				lines.push(`${pad}- [[${opts.linkText(it.path)}#${target}|${it.text.replace(/[|\]]/g, ' ').trim()}]]${count}`);
 			} else if (it.kind === 'embed') {
-				lines.push(`${pad}- [[${it.link ?? ''}]]${count}`);
+				const hash = it.link?.indexOf('#') ?? -1;
+				const subpath = hash < 0 ? '' : it.link!.slice(hash);
+				lines.push(`${pad}- [[${opts.linkText(it.path)}${subpath}]]${count}`);
 			} else if (it.kind === 'callout') {
 				lines.push(`${pad}- ${it.calloutType ?? 'note'}: ${it.text}`);
 			} else if (it.kind === 'list-heading') {

@@ -2,9 +2,7 @@
 
 Embed Outline shows one outline for a note and the notes it embeds. Each embedded note has its own row, with its headings below it. The outline also shows callout titles and headings in list items.
 
-Use it for a book or thesis kept as one note per chapter, or a project page that embeds meeting notes.
-
-The outline of the note and of the notes it embeds is free. Pro adds embeds inside embedded notes, word counts that include embedded text, marks for broken embeds and a Markdown copy of the outline. Pro costs $5 a month or $15 once, through GitHub Sponsors.
+The basic outline is free. Pro adds nested embeds, word counts, broken embed marks and a Markdown copy. It costs $5 a month or $15 once through GitHub Sponsors.
 
 ## Features
 
@@ -27,6 +25,8 @@ Click a heading of your note and the cursor moves to that heading. Click a headi
 Hold Ctrl (Cmd on macOS) and click a row from an embedded note to open that note in a new tab, at that heading. Rows also work from the keyboard: move to a row with Tab and press Enter.
 
 The arrow at the start of a row folds it. The button at the top folds all top-level rows.
+
+The panel remembers folds for up to 20 notes while the panel stays open. Open another note, then return to restore its folds. Inserting an unrelated heading keeps the existing folds. Closing the panel clears this memory. Renaming a heading can reset its fold.
 
 ### Callouts and headings in lists
 
@@ -119,7 +119,7 @@ No. Both can be open at the same time. Embed Outline only reads your notes. It d
 
 ### Is it slow on a long book?
 
-It reads the open note and the notes it embeds, from the cache of the app, and nothing else in the vault. It stops at 400 notes and 5,000 rows, and word counts stop after 20,000 embedded parts. A line at the top tells you when the row or word limit applies.
+It reads the open note and the notes it embeds, from the cache of the app, and nothing else in the vault. It stops at 400 notes and 5,000 rows, and word counts stop after 20,000 embedded parts. A line at the top tells you when the note, row or word limit applies.
 
 ### Why does a row say "No such heading" when the embed shows in the note?
 

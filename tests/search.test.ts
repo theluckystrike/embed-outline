@@ -71,6 +71,16 @@ describe('search in the view', () => {
 		expect(texts()).toHaveLength(6);
 	});
 
+	it('restores a note fold when switching back and keeps it after an inserted heading', () => {
+		const { view, texts } = setup();
+		view.contentEl.querySelector<HTMLButtonElement>('[aria-label="Fold all"]')!.click();
+		view.show(buildOutline('Chapter.md', fakeSource(files), FREE));
+		view.show(outline());
+		expect(texts()).toEqual(['Book', 'Other']);
+		view.show(buildOutline('Book.md', fakeSource({ ...files, 'Book.md': '# Added\n## Child\n' + files['Book.md'] }), FREE));
+		expect(texts()).toEqual(['Added', 'Child', 'Book', 'Other']);
+	});
+
 	it('keeps the input focused on refresh and clears the query on a note change', () => {
 		const { view, input, search, texts } = setup();
 		search('ferry');

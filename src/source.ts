@@ -74,10 +74,13 @@ export async function collect(app: App, rootPath: string, maxDepth: number): Pro
 		const next: NoteData[] = [];
 		for (const n of frontier) {
 			for (const e of n.embeds) {
-				if (notes.size >= MAX_NOTES) return src;
 				const { linkpath } = splitLink(e.link);
 				const f = linkpath === '' ? null : app.metadataCache.getFirstLinkpathDest(linkpath, n.path);
 				if (!f || f.extension !== 'md' || notes.has(f.path)) continue;
+				if (notes.size >= MAX_NOTES) {
+					src.truncated = true;
+					return src;
+				}
 				next.push(await read(f));
 			}
 		}

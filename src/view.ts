@@ -15,6 +15,17 @@ const ICONS: Partial<Record<OutlineItem['kind'], string>> = {
 
 const fmt = (n: number): string => n.toLocaleString();
 
+/** Stable keys survive inserted rows. Repeated siblings keep separate occurrence numbers. */
+function rowKeys(items: readonly OutlineItem[], prefix = ''): string[] {
+	const seen = new Map<string, number>();
+	return items.map(it => {
+		const identity = JSON.stringify([it.kind, it.path, it.heading ?? it.text, it.link ?? '']);
+		const occurrence = seen.get(identity) ?? 0;
+		seen.set(identity, occurrence + 1);
+		return `${prefix}${identity}:${occurrence}/`;
+	});
+}
+
 /** Short display name of an embed row: the note name and the heading or block part. */
 export function embedLabel(item: OutlineItem): string {
 	const link = item.link ?? item.text;
@@ -41,6 +52,7 @@ export class EmbedOutlineView extends ItemView {
 	private readonly plugin: EmbedOutlinePlugin;
 	/** Keys of rows the user folded. */
 	private readonly folded = new Set<string>();
+	private readonly noteFolds = new Map<string, Set<string>>();
 	private outline: Outline | null = null;
 	private message = '';
 	private query = '';
@@ -71,13 +83,24 @@ export class EmbedOutlineView extends ItemView {
 
 	async onClose(): Promise<void> {
 		this.contentEl.empty();
+		this.folded.clear();
+		this.noteFolds.clear();
+		this.outline = null;
+		this.query = '';
 		await Promise.resolve();
 	}
 
 	/** Shows an outline, or a message when there is none. */
 	show(outline: Outline | null, message = ''): void {
 		if (outline?.path !== this.outline?.path) {
+			const oldPath = this.outline?.path;
+			if (oldPath) {
+				this.noteFolds.delete(oldPath);
+				this.noteFolds.set(oldPath, new Set(this.folded));
+				while (this.noteFolds.size > 20) this.noteFolds.delete(this.noteFolds.keys().next().value!);
+			}
 			this.folded.clear();
+			for (const key of this.noteFolds.get(outline?.path ?? '') ?? []) this.folded.add(key);
 			this.query = '';
 		}
 		this.outline = outline;
@@ -152,7 +175,7 @@ export class EmbedOutlineView extends ItemView {
 			const n = o.locked;
 			el.createDiv({ cls: 'embed-outline-hint', text: `${n} ${n === 1 ? 'embed sits' : 'embeds sit'} inside embedded notes. Pro opens them.` });
 		}
-		if (o.truncated) el.createDiv({ cls: 'embed-outline-hint', text: 'This outline is very long, so some rows or embedded word counts are left out.' });
+		if (o.truncated) el.createDiv({ cls: 'embed-outline-hint', text: 'This outline is very long, so some notes, rows or embedded word counts are left out.' });
 		const tree = el.createDiv({ cls: 'embed-outline-tree', attr: { role: 'tree' } });
 		this.drawItems(tree, filtered.items, '');
 	}
@@ -177,7 +200,8 @@ export class EmbedOutlineView extends ItemView {
 	private foldAll(): void {
 		const o = this.outline;
 		if (!o) return;
-		const keys = o.items.flatMap((it, i) => (it.children.length ? [String(i)] : []));
+		const rowIds = rowKeys(o.items);
+		const keys = o.items.flatMap((it, i) => (it.children.length ? [rowIds[i]!] : []));
 		const allFolded = keys.every((k) => this.folded.has(k));
 		this.folded.clear();
 		if (!allFolded) for (const k of keys) this.folded.add(k);
@@ -185,8 +209,9 @@ export class EmbedOutlineView extends ItemView {
 	}
 
 	private drawItems(parent: HTMLElement, items: readonly OutlineItem[], prefix: string): void {
+		const keys = rowKeys(items, prefix);
 		items.forEach((it, i) => {
-			const key = `${prefix}${i}`;
+			const key = keys[i]!;
 			const node = parent.createDiv({ cls: 'embed-outline-item', attr: { 'data-kind': it.kind, role: 'treeitem' } });
 			const row = node.createDiv({ cls: 'embed-outline-row', attr: { tabindex: '0' } });
 			const searching = this.query.trim().length > 0;
@@ -222,7 +247,7 @@ export class EmbedOutlineView extends ItemView {
 					go(evt);
 				}
 			});
-			if (it.children.length && !folded) this.drawItems(node.createDiv({ cls: 'embed-outline-children', attr: { role: 'group' } }), it.children, `${key}.`);
+			if (it.children.length && !folded) this.drawItems(node.createDiv({ cls: 'embed-outline-children', attr: { role: 'group' } }), it.children, key);
 		});
 	}
 }
