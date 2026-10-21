@@ -8,6 +8,8 @@ The basic outline is free. Pro adds nested embeds, word counts, broken embed mar
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/embed-outline.gif" alt="The outline of a manuscript note with its embedded chapters, a click into a chapter, then word counts with Pro" width="720">
 
+Free: embedded notes, callouts, list headings. Pro: deeper embeds, word counts, broken embed marks, Markdown copy. $15 one time or $5 a month: [Sponsor](https://github.com/sponsors/theluckystrike?metadata_source=embed-outline) or [$15 one-time offer](https://github.com/sponsors/theluckystrike/sponsorships?tier_id=666162&metadata_source=embed-outline).
+
 ### Embedded notes in the outline
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/embedded.png" alt="A manuscript note on the left and, on the right, an outline with a row for each embedded chapter and the chapter headings under it" width="720">
@@ -87,17 +89,16 @@ It needs Obsidian 1.13.4 or newer. It was tested on desktop with Obsidian 1.13.4
 3. Select the Embed outline tab, or run the command "Open the outline panel".
 4. Click a row to go to it.
 
-The outline follows the note that you open last. It updates shortly after you change that note or any note that it embeds.
+The outline follows the last open note and updates after it or an embed changes.
 
 ## Pro
 
 Pro unlocks nested embeds, word counts, broken embed marks and the Markdown copy. To get it:
 
-1. Sponsor [theluckystrike on GitHub Sponsors](https://github.com/sponsors/theluckystrike) with $5 a month, or $15 once. A total payment of $15 meets the payment requirement for Pro without further payment. Sign-in and the checks below still apply.
-2. In Obsidian, open the settings of Embed Outline and select "Sign in with GitHub".
-3. The plugin copies a code and opens github.com/login/device. Paste the code there and approve.
+1. Sponsor through [GitHub Sponsors](https://github.com/sponsors/theluckystrike?metadata_source=embed-outline). A total payment of $15 meets the payment requirement for Pro without further payment. Sign-in and the checks below still apply.
+2. In settings, select "Sign in with GitHub" and enter the code at github.com/login/device.
 
-A negative sponsorship answer turns Pro off. The free outline keeps working.
+Refresh after a new sponsorship. A negative sponsorship answer turns Pro off. The free outline keeps working.
 
 ## Settings
 
@@ -138,6 +139,8 @@ After sign in, Embed Outline sends one query to `https://api.github.com/graphql`
 After a successful check, Pro can work offline for up to 14 days. Sign out or a negative sponsorship answer turns Pro off. The plugin stores the GitHub token through the secret storage API of Obsidian. It does not put the token in its saved settings or its local sponsorship data. The local storage of this device keeps your GitHub login, the tier and the time of the last check. Sign out clears the token. You can also revoke the access in your GitHub settings, under Applications.
 
 ## Support
+
+Plugin page: [embed-outline](https://notemods.com/plugins/embed-outline/).
 
 Report a bug or ask for a feature in the issue tracker of this repository. Include your Obsidian version, the embed as you wrote it, and what the outline showed.
 
