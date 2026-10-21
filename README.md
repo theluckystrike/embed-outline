@@ -8,7 +8,7 @@ The basic outline is free. Pro adds nested embeds, word counts, broken embed mar
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/embed-outline.gif" alt="The outline of a manuscript note with its embedded chapters, a click into a chapter, then word counts with Pro" width="720">
 
-Free: embedded notes, callouts, list headings. Pro: deeper embeds, word counts, broken embed marks, Markdown copy. $15 one time or $5 a month: [Sponsor](https://github.com/sponsors/theluckystrike?metadata_source=embed-outline) or [$15 one-time offer](https://github.com/sponsors/theluckystrike/sponsorships?tier_id=666162&metadata_source=embed-outline).
+Pro costs $15 one time or $5 a month: [Sponsor](https://github.com/sponsors/theluckystrike?metadata_source=embed-outline) or [$15 one-time offer](https://github.com/sponsors/theluckystrike/sponsorships?tier_id=666162&metadata_source=embed-outline).
 
 ### Embedded notes in the outline
 
@@ -28,7 +28,7 @@ Hold Ctrl (Cmd on macOS) and click a row from an embedded note to open that note
 
 The arrow at the start of a row folds it. The button at the top folds all top-level rows.
 
-The panel remembers folds for up to 20 notes while the panel stays open. Open another note, then return to restore its folds. Inserting an unrelated heading keeps the existing folds. Closing the panel clears this memory. Renaming a heading can reset its fold.
+While the panel stays open, it remembers the folds of up to 20 notes, so a note you return to keeps its folds. Inserting an unrelated heading keeps the existing folds. Closing the panel clears this memory. Renaming a heading can reset its fold.
 
 ### Callouts and headings in lists
 
@@ -58,7 +58,7 @@ Without Pro, the outline opens the embeds of the note itself. An embed inside an
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/word-counts.png" alt="The outline with a word count on each heading and embed, and 439 words for the whole manuscript at the top" width="720">
 
-Pro shows the number of words next to each heading and each embed. The count of a heading covers its whole section, with the embedded text counted. The top of the panel shows the total for the note.
+Pro shows a word count next to each heading and embed. The count of a heading covers its whole section, with the embedded text counted. The top of the panel shows the total for the note.
 
 Links count as their visible text. Code, comments, front matter, URLs and callout markers do not count. Each Chinese or Japanese character counts as one word.
 
@@ -72,15 +72,15 @@ Pro marks embeds with missing notes, headings or block IDs. It also marks loops,
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/copy.png" alt="A new note with the outline pasted as a nested list of links to each heading, with word counts" width="720">
 
-The copy button, or the command "Copy the outline as a Markdown list", puts the outline on the clipboard. Each heading becomes a link to the note it comes from, such as `[[Chapter 1#The ferry|The ferry]]`, with the word count when counts are on. Paste it into a note to get a table of contents for the whole book, with links that work.
+The copy button, or the command "Copy the outline as a Markdown list", puts the outline on the clipboard. Each heading becomes a link to the note it comes from, such as `[[Chapter 1#The ferry|The ferry]]`, with the word count when counts are on. Paste it into a note for a linked table of contents of the whole book.
 
 ## Install
 
-When Embed Outline is in the community directory, open Settings, then Community plugins, then Browse, and search for "Embed Outline". Select Install, then Enable.
+Open Settings, then Community plugins, then Browse, and search for "Embed Outline". Select Install, then Enable.
 
-To install by hand, download `main.js`, `manifest.json` and `styles.css` from the latest release. Put them in `<vault>/.obsidian/plugins/embed-outline/`. Reload the list of community plugins, then turn on Embed Outline.
+To install by hand, download `main.js`, `manifest.json` and `styles.css` from the latest release. Put them in `<vault>/.obsidian/plugins/embed-outline/`. Reload the community plugins, then turn on Embed Outline.
 
-It needs Obsidian 1.13.4 or newer. It was tested on desktop with Obsidian 1.13.4 and 1.14.4. It was not tested on mobile.
+It needs Obsidian 1.13.4 or newer. It was tested on desktop with Obsidian 1.13.4 and 1.14.4, not on mobile.
 
 ## Usage
 
@@ -93,14 +93,16 @@ The outline follows the last open note and updates after it or an embed changes.
 
 ## Pro
 
-Pro unlocks nested embeds, word counts, broken embed marks and the Markdown copy. To get it:
+To get Pro:
 
 1. Sponsor through [GitHub Sponsors](https://github.com/sponsors/theluckystrike?metadata_source=embed-outline). A total payment of $15 meets the payment requirement for Pro without further payment. Sign-in and the checks below still apply.
 2. In settings, select "Sign in with GitHub" and enter the code at github.com/login/device.
 
-Refresh after a new sponsorship. A negative sponsorship answer turns Pro off. The free outline keeps working.
+Refresh after a new sponsorship. Without Pro, the free outline keeps working.
 
 ## Settings
+
+After a minor or major update, this plugin opens one What's new tab in the background. The tab and settings card suggest other NoteMods plugins and Zovo Chat and link to notemods.com for feedback ([privacy](https://notemods.com/privacy/)). The tab sends no data. Turn the tab off in Settings.
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/settings.png" alt="Settings with the Pro section, the two outline switches, the embed depth slider and the two Pro switches" width="720">
 
@@ -116,7 +118,7 @@ Refresh after a new sponsorship. A negative sponsorship answer turns Pro off. Th
 
 ### Does it replace the core Outline?
 
-No. Both can be open at the same time. Embed Outline only reads your notes. It does not change them.
+No. Both can be open at the same time. Embed Outline only reads your notes and never changes them.
 
 ### Is it slow on a long book?
 
@@ -124,7 +126,7 @@ It reads the open note and the notes it embeds, from the cache of the app, and n
 
 ### Why does a row say "No such heading" when the embed shows in the note?
 
-The heading text must match after the app removes special characters such as `:` and `#`. The plugin asks the app to find the heading. Check for a renamed heading.
+The heading text must match after the app removes special characters such as `:` and `#`. Check for a renamed heading.
 
 ## Payment, account and network
 
@@ -142,7 +144,7 @@ After a successful check, Pro can work offline for up to 14 days. Sign out or a 
 
 Plugin page: [embed-outline](https://notemods.com/plugins/embed-outline/).
 
-Report a bug or ask for a feature in the issue tracker of this repository. Include your Obsidian version, the embed as you wrote it, and what the outline showed.
+Report bugs and feature requests in the issue tracker. Include your Obsidian version, the embed as written and what the outline showed.
 
 To build from source:
 
@@ -152,7 +154,7 @@ npm run build
 npm test
 ```
 
-The tests check 34 golden cases for the outline and search rules. An end-to-end test opens the sample manuscript in Obsidian and checks the outline rows, search, jumps and Pro features.
+The tests check 34 golden cases for the outline and search rules, and an end-to-end run in Obsidian.
 
 ## License
 
