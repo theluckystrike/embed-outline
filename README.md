@@ -28,13 +28,21 @@ Hold Ctrl (Cmd on macOS) and click a row from an embedded note to open that note
 
 The arrow at the start of a row folds it. The button at the top folds all top-level rows.
 
-While the panel stays open, it remembers the folds of up to 20 notes, so a note you return to keeps its folds. Inserting an unrelated heading keeps the existing folds. Closing the panel clears this memory. Renaming a heading can reset its fold.
+While the panel stays open, it remembers the folds of up to 20 notes.
+
+### Follow your place
+
+<img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/current-section.png" alt="The manuscript scrolled into the embedded Chapter 2, with the row First entries marked in the outline" width="720">
+
+As you scroll, the outline marks the row of the section at the top of the note. This also works inside embedded notes, so a heading of an embedded chapter gets the mark. It works in reading view and live preview. After you click a row, that row keeps the mark until you scroll.
+
+If the row is in a folded branch or a locked embed, its visible parent gets the mark. The panel scrolls only when the marked row is out of view. Turn this off with the setting "Highlight the current section".
 
 ### Callouts and headings in lists
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/callouts.png" alt="A research note with info, question and warning callouts listed as rows under their headings, and a heading written inside a list item" width="720">
 
-A callout such as `> [!warning] Spring tides` shows as a row with its title, under the heading it sits in. A callout with no title shows its type, as the app does. Links and emphasis in a title show as plain text.
+A callout such as `> [!warning] Spring tides` shows as a row with its title, under the heading it sits in. A callout with no title shows its type, as the app does.
 
 A heading written inside a list item, such as `- ## Open questions`, is also a row. The app does not treat these as headings, so the core Outline never shows them. You can turn both off in the settings.
 
@@ -42,11 +50,11 @@ A heading written inside a list item, such as `- ## Open questions`, is also a r
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/search.png" alt="A search for ferry shows the matching heading in Chapter 1 and its parent rows" width="720">
 
-Type in "Search outline" to find a heading, callout title, list heading or embed name. Search is free and ignores case and spaces at the start and end. Punctuation is literal text. Search checks the row text that the panel shows.
+Type in "Search outline" to find a heading, callout title, list heading or embed name. Search is free and ignores case.
 
-The panel shows each match and its parent rows. The count includes matches only. Folded paths open during search. Use the clear button or Escape to restore the full outline and its fold state. Fold controls are off during search.
+The panel shows each match and its parent rows, and opens folded paths. The count includes matches only. Use the clear button or Escape to restore the full outline and its folds.
 
-Click a result, or press Enter, to go to it. The query stays during updates and clears when you open another note. Search includes the deeper embeds that Pro opens. Word counts and the Markdown copy use the full outline.
+Click a result, or press Enter, to go to it. The query clears when you open another note. Search includes the deeper embeds that Pro opens.
 
 ### Nested embeds (Pro)
 
@@ -66,13 +74,13 @@ Links count as their visible text. Code, comments, front matter, URLs and callou
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/broken.png" alt="The end of the outline with a red row No such note: Acknowledgments under Back matter" width="720">
 
-Pro marks embeds with missing notes, headings or block IDs. It also marks loops, such as two notes that embed each other. The panel counts them. Without Pro, these embeds are left out.
+Pro marks embeds with missing notes, headings or block IDs. It also marks loops, such as two notes that embed each other. Without Pro, these embeds are left out.
 
 ### Copy as a Markdown list (Pro)
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/copy.png" alt="A new note with the outline pasted as a nested list of links to each heading, with word counts" width="720">
 
-The copy button, or the command "Copy the outline as a Markdown list", puts the outline on the clipboard. Each heading becomes a link to the note it comes from, such as `[[Chapter 1#The ferry|The ferry]]`, with the word count when counts are on. Paste it into a note for a linked table of contents of the whole book.
+The copy button, or the command "Copy the outline as a Markdown list", puts the outline on the clipboard. Each heading becomes a link to the note it comes from, such as `[[Chapter 1#The ferry|The ferry]]`, with the word count when counts are on.
 
 ## Install
 
@@ -104,12 +112,13 @@ Refresh after a new sponsorship. Without Pro, the free outline keeps working.
 
 After a minor or major update, this plugin opens one What's new tab in the background. The tab and settings card suggest other NoteMods plugins and Zovo Chat and link to notemods.com for feedback ([privacy](https://notemods.com/privacy/)). The tab sends no data. Turn the tab off in Settings.
 
-<img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/settings.png" alt="Settings with the Pro section, the two outline switches, the embed depth slider and the two Pro switches" width="720">
+<img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/settings.png" alt="Settings with the Pro section, the three outline switches, the embed depth slider and the two Pro switches" width="720">
 
 | Setting | Default | Allowed values |
 | --- | --- | --- |
 | Callout titles | On | On or off |
 | Headings in list items | On | On or off |
+| Highlight the current section | On | On or off |
 | Embed depth | 5 | 1 to 5 levels (Pro) |
 | Word counts | On | On or off (Pro) |
 | Broken embeds | On | On or off (Pro) |
@@ -122,7 +131,7 @@ No. Both can be open at the same time. Embed Outline only reads your notes and n
 
 ### Is it slow on a long book?
 
-It reads the open note and the notes it embeds, from the cache of the app, and nothing else in the vault. It stops at 400 notes and 5,000 rows, and word counts stop after 20,000 embedded parts. A line at the top tells you when the note, row or word limit applies.
+It reads only the open note and the notes it embeds, from the cache of the app. It stops at 400 notes and 5,000 rows, and word counts stop after 20,000 embedded parts. A line at the top tells you when a limit applies.
 
 ### Why does a row say "No such heading" when the embed shows in the note?
 

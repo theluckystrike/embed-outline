@@ -10,6 +10,8 @@ export interface EmbedOutlineSettings {
 	callouts: boolean;
 	/** Headings inside list items as outline rows. */
 	listHeadings: boolean;
+	/** Mark the row of the section at the top of the open note, also inside embedded notes. */
+	highlight: boolean;
 	/** Pro: levels of embeds inside embeds to open, 1 to MAX_DEPTH. */
 	depth: number;
 	/** Pro: word counts per heading and embed. */
@@ -21,6 +23,7 @@ export interface EmbedOutlineSettings {
 export const DEFAULT_SETTINGS: EmbedOutlineSettings = {
 	callouts: true,
 	listHeadings: true,
+	highlight: true,
 	depth: MAX_DEPTH,
 	words: true,
 	broken: true,
@@ -35,6 +38,7 @@ export function normalizeSettings(saved: Partial<EmbedOutlineSettings> | null | 
 	return {
 		callouts: bool(s.callouts, DEFAULT_SETTINGS.callouts),
 		listHeadings: bool(s.listHeadings, DEFAULT_SETTINGS.listHeadings),
+		highlight: bool(s.highlight, DEFAULT_SETTINGS.highlight),
 		depth: Math.min(MAX_DEPTH, Math.max(1, depth)),
 		words: bool(s.words, DEFAULT_SETTINGS.words),
 		broken: bool(s.broken, DEFAULT_SETTINGS.broken),
@@ -68,6 +72,11 @@ export class EmbedOutlineSettingTab extends PluginSettingTab {
 				control: { type: 'toggle', key: 'listHeadings', defaultValue: DEFAULT_SETTINGS.listHeadings },
 			},
 			{
+				name: 'Highlight the current section',
+				desc: 'Marks the row of the section at the top of the open note as you scroll, also inside embedded notes.',
+				control: { type: 'toggle', key: 'highlight', defaultValue: DEFAULT_SETTINGS.highlight },
+			},
+			{
 				name: 'Embed depth',
 				desc: `Pro. How many levels of embeds inside embedded notes to open, from 1 to ${MAX_DEPTH}. Without Pro, the outline opens the embeds of the note itself.`,
 				control: { type: 'slider', key: 'depth', defaultValue: DEFAULT_SETTINGS.depth, min: 1, max: MAX_DEPTH, step: 1 },
@@ -86,7 +95,7 @@ export class EmbedOutlineSettingTab extends PluginSettingTab {
 				name: 'Pro features',
 				desc: isPro()
 					? 'Pro is on: nested embeds, word counts, broken embed marks and the Markdown copy of the outline.'
-					: 'Free version: the headings of the note and of each note it embeds, callout titles, headings in list items, and jump on click. Pro adds nested embeds, word counts, broken embed marks and a Markdown copy of the outline.',
+					: 'Free version: the headings of the note and of each note it embeds, callout titles, headings in list items, the current section mark, and jump on click. Pro adds nested embeds, word counts, broken embed marks and a Markdown copy of the outline.',
 			},
 		];
 	}

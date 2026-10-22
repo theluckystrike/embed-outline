@@ -61,6 +61,13 @@
 		"wait": 1200
 	},
 	{
+		"feature": "current-section",
+		"caption": "Scroll the manuscript into Chapter 2: the outline marks First entries, a heading inside the embedded chapter.",
+		"note": "Manuscript.md",
+		"eval": "(async () => { const p = app.plugins.plugins['embed-outline']; p.pro.signOut(); p.settings.words = true; p.settings.highlight = true; app.workspace.rightSplit.expand(); await p.activateView(); await new Promise((r) => setTimeout(r, 700)); const leaf = app.workspace.getLeavesOfType('markdown').find((l) => l.view.file?.path.endsWith('Manuscript.md')); const v = leaf.view; app.workspace.setActiveLeaf(leaf, { focus: true }); const sc = v.getMode() === 'preview' ? v.contentEl.querySelector('.markdown-reading-view .markdown-preview-view') : v.contentEl.querySelector('.markdown-source-view .cm-scroller'); for (let i = 0; i < 30; i++) { const h = [...sc.querySelectorAll('.markdown-embed [data-heading]')].find((e) => e.getAttribute('data-heading') === 'First entries' && e.getBoundingClientRect().height > 0); if (h) { sc.scrollTop += h.getBoundingClientRect().top - sc.getBoundingClientRect().top - 2; break; } v.currentMode.applyScroll(12); await new Promise((r) => setTimeout(r, 100)); } await new Promise((r) => setTimeout(r, 600)); return document.querySelector('.embed-outline-row.is-active .embed-outline-text')?.textContent ?? 'none'; })()",
+		"wait": 900
+	},
+	{
 		"feature": "settings",
 		"caption": "Settings after sign in: the Pro section with the GitHub account, then the outline options.",
 		"eval": "(async () => { const p = app.plugins.plugins['embed-outline']; p.pro.opts.http = async () => ({ status: 200, json: { data: { viewer: { login: 'demo-reader' }, user: { sponsorshipForViewerAsSponsor: { isActive: true, isOneTimePayment: false, tier: { name: '$5 a month', monthlyPriceInCents: 500 } } } } } }); app.secretStorage.setSecret('embed-outline-github-token', 'gho_' + '0'.repeat(36)); await p.pro.refreshNow(); app.workspace.rightSplit.expand(); await p.activateView(); await new Promise((r) => setTimeout(r, 700)); await new Promise((r) => setTimeout(r, 700)); app.setting.open(); app.setting.openTabById('embed-outline'); await new Promise((r) => setTimeout(r, 500)); return 'ok'; })()",

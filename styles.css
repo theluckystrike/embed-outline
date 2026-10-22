@@ -85,6 +85,13 @@
 	color: var(--nav-item-color-hover);
 }
 
+/* The current section: the row of the place at the top of the open note. */
+.embed-outline-row.is-active {
+	background-color: var(--nav-item-background-active);
+	color: var(--nav-item-color-active);
+	font-weight: var(--nav-item-weight-active);
+}
+
 .embed-outline-fold,
 .embed-outline-icon {
 	display: flex;

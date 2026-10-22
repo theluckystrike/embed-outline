@@ -335,11 +335,12 @@ export function buildOutline(rootPath: string, src: OutlineSource, opts: Outline
 	return out;
 }
 
-/** Keep rows whose label contains the query and their parents. Do not change the source tree. */
+/** Keep rows whose label contains the query and their parents. Do not change the source tree. `origins` gets each copy's source row. */
 export function filterOutline(
 	items: readonly OutlineItem[],
 	query: string,
 	label: (row: OutlineItem) => string = (row) => row.text,
+	origins?: Map<OutlineItem, OutlineItem>,
 ): { items: OutlineItem[]; matches: number } {
 	const needle = query.trim().normalize('NFC').toLowerCase();
 	if (!needle) return { items: [...items], matches: 0 };
@@ -350,7 +351,11 @@ export function filterOutline(
 			const children = walk(row.children);
 			const match = label(row).normalize('NFC').toLowerCase().includes(needle);
 			if (match) matches++;
-			if (match || children.length) kept.push({ ...row, children });
+			if (match || children.length) {
+				const copy = { ...row, children };
+				origins?.set(copy, row);
+				kept.push(copy);
+			}
 		}
 		return kept;
 	};
@@ -421,4 +426,111 @@ export function toMarkdownList(outline: Outline, opts: MarkdownListOptions): str
 	};
 	walk(outline.items, 0);
 	return lines.join('\n') + (lines.length ? '\n' : '');
+}
+
+/** Heading text as the panel compares it with the rendered heading of an embed: no case, no outer spaces. */
+export function headingKey(text: string): string {
+	return text.trim().toLowerCase();
+}
+
+/** A heading that the app drew inside an embed. `top` is in pixels from the top of the visible area: 0 or less is at or above it. */
+export interface PlacedHeading {
+	text: string;
+	top: number;
+}
+
+/**
+ * The top of the visible area of the open note.
+ *   line: the top line is in the note's own text.
+ *   embed: the top is inside a top-level embed. `line` is the top line, `link` the embed link as the app shows it,
+ *          and `headings` the embedded headings in document order.
+ */
+export type ViewPlace =
+	| { kind: 'line'; line: number }
+	| { kind: 'embed'; line: number; link?: string; headings: readonly PlacedHeading[] };
+
+/** Pixels of tolerance for "at or above the top", so a heading that a scroll put at the top counts. */
+export const PLACE_SLACK_PX = 4;
+
+/** The rows from a top-level row down to the first row that matches, or an empty list. */
+export function chainWhere(items: readonly OutlineItem[], match: (row: OutlineItem) => boolean): OutlineItem[] {
+	for (const row of items) {
+		if (match(row)) return [row];
+		const below = chainWhere(row.children, match);
+		if (below.length) return [row, ...below];
+	}
+	return [];
+}
+
+/** True when two rows stand for the same place in the note, also across two builds of the outline. */
+export function sameRow(a: OutlineItem, b: OutlineItem): boolean {
+	return a.kind === b.kind && a.path === b.path && a.line === b.line && a.rootLine === b.rootLine && a.text === b.text && a.depth === b.depth;
+}
+
+/** Rows in the open note's own text: rows of depth 0 and top-level embed rows. Each with its line in the open note. */
+function ownRows(items: readonly OutlineItem[], out: OutlineItem[] = []): OutlineItem[] {
+	for (const row of items) {
+		if (row.depth === 0 || (row.kind === 'embed' && row.depth === 1)) out.push(row);
+		if (row.depth === 0) ownRows(row.children, out);
+	}
+	return out;
+}
+
+/** Heading rows under an embed row, in document order, nested embeds included. */
+function headingRows(items: readonly OutlineItem[], out: OutlineItem[] = []): OutlineItem[] {
+	for (const row of items) {
+		if (row.kind === 'heading') out.push(row);
+		headingRows(row.children, out);
+	}
+	return out;
+}
+
+/**
+ * The rows from the top level down to the row for a place in the open note (the current section).
+ * Line: the last own row at or before the line. Embed: the last embedded heading at or above the top, matched to its
+ * row by heading order and then by text; with no such heading, the embed row. Empty when no row fits.
+ */
+export function placeChain(items: readonly OutlineItem[], place: ViewPlace): OutlineItem[] {
+	const own = ownRows(items);
+	if (place.kind === 'embed') {
+		const embeds = own.filter((r) => r.kind === 'embed');
+		const named = place.link === undefined ? [] : embeds.filter((r) => r.link === place.link);
+		const pool = named.length ? named : embeds;
+		let embed: OutlineItem | null = null;
+		for (const r of pool) if (!embed || Math.abs(r.rootLine - place.line) < Math.abs(embed.rootLine - place.line)) embed = r;
+		if (embed) {
+			const rows = headingRows(embed.children);
+			let next = 0;
+			let hit: OutlineItem | null = null;
+			for (const h of place.headings) {
+				const key = headingKey(h.text);
+				// Order first: the next row with the same text. A heading with no row (a locked embed) is skipped.
+				let j = next;
+				while (j < rows.length && headingKey(rows[j]!.text) !== key) j++;
+				if (j >= rows.length) continue;
+				next = j + 1;
+				if (h.top <= PLACE_SLACK_PX) hit = rows[j]!;
+				else break;
+			}
+			const target = hit ?? embed;
+			return chainWhere(items, (r) => r === target);
+		}
+	}
+	let last: OutlineItem | null = null;
+	for (const r of own) if (r.rootLine <= place.line) last = r;
+	return last ? chainWhere(items, (r) => r === last) : [];
+}
+
+/**
+ * The row to highlight for a chain of rows: the deepest row that the panel shows. A locked row is never the result,
+ * and a folded row hides the rows below it. Null for an empty chain.
+ */
+export function visibleRow(chain: readonly OutlineItem[], folded: (row: OutlineItem) => boolean = () => false): OutlineItem | null {
+	let out: OutlineItem | null = null;
+	for (const row of chain) {
+		if (row.locked) break;
+		out = row;
+		if (folded(row)) break;
+	}
+	return out;
 }

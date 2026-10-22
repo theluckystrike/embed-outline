@@ -1,7 +1,8 @@
 import { MarkdownView, Notice, Plugin, TFile, type WorkspaceLeaf } from 'obsidian';
 import type { SponsorsManager } from './license/index';
 import { createGitHubSponsors } from './license/github-obsidian';
-import { buildOutline, toMarkdownList, type Outline, type OutlineItem, type OutlineOptions } from './outline';
+import { readPlace, ScrollFollower } from './follow';
+import { buildOutline, chainWhere, headingKey, placeChain, sameRow, toMarkdownList, type Outline, type OutlineItem, type OutlineOptions } from './outline';
 import { SPONSORS, bindPro, isPro, onProChange, resetPro } from './pro';
 import { DEFAULT_SETTINGS, EmbedOutlineSettingTab, normalizeSettings, type EmbedOutlineSettings } from './settings';
 import { collect } from './source';
@@ -25,6 +26,19 @@ export default class EmbedOutlinePlugin extends Plugin {
 	private last: Outline | null = null;
 	private timer: number | null = null;
 	private generation = 0;
+	/** Scroll listener on the open note for "Highlight the current section". */
+	private readonly follow = new ScrollFollower(
+		() => this.updatePlace(),
+		undefined,
+		() => {
+			this.pin = null;
+		},
+	);
+	/**
+	 * The row of the last jump from the outline. It stays the current section until the reader moves in the note with
+	 * the wheel, touch, keys or the pointer. The scrolls of the jump itself do not clear it.
+	 */
+	private pin: OutlineItem | null = null;
 
 	async onload(): Promise<void> {
 		// First: "What's new" reads its state before the settings load (packages/hello). It does not wait.
@@ -67,6 +81,14 @@ export default class EmbedOutlinePlugin extends Plugin {
 			}),
 		);
 		this.registerEvent(this.app.vault.on('create', () => this.scheduleRefresh(REFRESH_MS)));
+		this.registerEvent(
+			this.app.workspace.on('layout-change', () => {
+				this.syncFollow();
+				this.updatePlace();
+			}),
+		);
+		this.registerEvent(this.app.workspace.on('resize', () => this.updatePlace()));
+		this.register(() => this.follow.stop());
 
 		this.app.workspace.onLayoutReady(() => {
 			this.onActiveLeaf(this.app.workspace.getMostRecentLeaf());
@@ -117,7 +139,11 @@ export default class EmbedOutlinePlugin extends Plugin {
 		const view = leaf?.view;
 		if (!(view instanceof MarkdownView) || !view.file) return;
 		this.rootLeaf = leaf;
-		if (view.file.path === this.rootPath) return;
+		if (view.file.path === this.rootPath) {
+			this.syncFollow();
+			return;
+		}
+		this.pin = null;
 		this.rootPath = view.file.path;
 		this.scheduleRefresh(0);
 	}
@@ -143,6 +169,7 @@ export default class EmbedOutlinePlugin extends Plugin {
 		if (!file) {
 			this.last = null;
 			for (const v of this.views()) v.show(null);
+			this.syncFollow();
 			return null;
 		}
 		const opts = this.options();
@@ -151,7 +178,59 @@ export default class EmbedOutlinePlugin extends Plugin {
 		const outline = buildOutline(file.path, src, opts);
 		this.last = outline;
 		for (const v of this.views()) v.show(outline);
+		this.syncFollow();
+		this.updatePlace();
 		return outline;
+	}
+
+	/** The open tab that shows the root note, if any. It does not open a tab. */
+	private placeView(): MarkdownView | null {
+		const path = this.rootPath;
+		if (!path) return null;
+		const leaf = this.rootLeaf;
+		if (leaf?.view instanceof MarkdownView && leaf.view.file?.path === path) return leaf.view;
+		for (const l of this.app.workspace.getLeavesOfType('markdown')) {
+			if (l.view instanceof MarkdownView && l.view.file?.path === path) return l.view;
+		}
+		return null;
+	}
+
+	/**
+	 * Starts or stops the scroll listener of "Highlight the current section". It runs only while the setting is on and
+	 * an outline panel is open. `closing` is a panel that closes now.
+	 */
+	syncFollow(closing?: EmbedOutlineView): void {
+		const on = this.settings.highlight && this.views().some((v) => v !== closing);
+		this.follow.watch(on ? (this.placeView()?.contentEl ?? null) : null);
+		if (!this.follow.listening) {
+			this.pin = null;
+			for (const v of this.views()) v.setActive(null);
+		}
+	}
+
+	/** True while the scroll listener of "Highlight the current section" is registered. */
+	following(): boolean {
+		return this.follow.listening;
+	}
+
+	/** Finds the current section of the open note and marks its row in each panel. */
+	updatePlace(): void {
+		const o = this.last;
+		const view = this.follow.listening ? this.placeView() : null;
+		if (!o || !view) {
+			for (const v of this.views()) v.setActive(null);
+			return;
+		}
+		const pin = this.pin;
+		let chain = pin ? chainWhere(o.items, (r) => sameRow(r, pin)) : [];
+		if (!chain.length) chain = placeChain(o.items, readPlace(view));
+		for (const v of this.views()) v.setActive(chain);
+	}
+
+	/** Makes a row the current section after a jump to it. */
+	private pinRow(item: OutlineItem): void {
+		this.pin = item;
+		this.updatePlace();
 	}
 
 	/** Opens the outline in the right sidebar and shows it. */
@@ -199,8 +278,15 @@ export default class EmbedOutlinePlugin extends Plugin {
 		const view = await this.rootView();
 		if (!view) return;
 		this.app.workspace.setActiveLeaf(view.leaf, { focus: true });
+		this.pinRow(item);
 		scrollToLine(view, item.rootLine);
-		if (item.depth > 0 && item.kind === 'heading') window.requestAnimationFrame(() => window.requestAnimationFrame(() => scrollToEmbeddedHeading(view, item.text)));
+		if (item.depth > 0 && item.kind === 'heading')
+			window.requestAnimationFrame(() =>
+				window.requestAnimationFrame(() => {
+					scrollToEmbeddedHeading(view, item.text);
+					this.pinRow(item);
+				}),
+			);
 	}
 
 	/** Pro: copies the outline as a nested Markdown list with a link to each heading. */
@@ -243,9 +329,9 @@ function scrollToLine(view: MarkdownView, line: number): void {
 
 /** After a scroll to an embed: brings the embedded heading with this text into view, when the app has drawn it. */
 function scrollToEmbeddedHeading(view: MarkdownView, text: string): void {
-	const want = text.trim().toLowerCase();
+	const want = headingKey(text);
 	for (const el of Array.from(view.containerEl.querySelectorAll<HTMLElement>('.markdown-embed [data-heading]'))) {
-		if ((el.getAttribute('data-heading') ?? '').trim().toLowerCase() !== want) continue;
+		if (headingKey(el.getAttribute('data-heading') ?? '') !== want) continue;
 		el.scrollIntoView({ block: 'center' });
 		return;
 	}

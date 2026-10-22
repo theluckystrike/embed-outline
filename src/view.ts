@@ -1,5 +1,5 @@
 import { ItemView, Platform, setIcon, setTooltip, type WorkspaceLeaf } from 'obsidian';
-import { filterOutline, type Outline, type OutlineItem } from './outline';
+import { filterOutline, visibleRow, type Outline, type OutlineItem } from './outline';
 import { isPro } from './pro';
 import type EmbedOutlinePlugin from './main';
 
@@ -56,6 +56,13 @@ export class EmbedOutlineView extends ItemView {
 	private outline: Outline | null = null;
 	private message = '';
 	private query = '';
+	/** Rows from the top level down to the current section, from the plugin's outline, or null. */
+	private active: OutlineItem[] | null = null;
+	/** The drawn row element and fold key of each source row, for the current section mark. */
+	private readonly rowEls = new Map<OutlineItem, HTMLElement>();
+	private readonly rowKeyOf = new Map<OutlineItem, string>();
+	/** Search results are copies: the source row of each copy. */
+	private readonly origins = new Map<OutlineItem, OutlineItem>();
 
 	constructor(leaf: WorkspaceLeaf, plugin: EmbedOutlinePlugin) {
 		super(leaf);
@@ -82,6 +89,9 @@ export class EmbedOutlineView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
+		this.plugin.syncFollow(this);
+		this.active = null;
+		this.clearRows();
 		this.contentEl.empty();
 		this.folded.clear();
 		this.noteFolds.clear();
@@ -112,12 +122,54 @@ export class EmbedOutlineView extends ItemView {
 		return this.outline;
 	}
 
+	/** Marks the current section: the deepest row of the chain that the panel shows. Null removes the mark. */
+	setActive(chain: OutlineItem[] | null): void {
+		this.active = chain?.length ? chain : null;
+		this.paintActive(true);
+	}
+
+	private clearRows(): void {
+		this.rowEls.clear();
+		this.rowKeyOf.clear();
+		this.origins.clear();
+	}
+
+	private paintActive(reveal: boolean): void {
+		for (const el of Array.from(this.contentEl.querySelectorAll<HTMLElement>('.embed-outline-row.is-active'))) {
+			el.removeClass('is-active');
+			el.removeAttribute('aria-current');
+		}
+		const chain = this.active;
+		if (!chain) return;
+		// During a search every path is open, and only the rows that the search shows can have the mark.
+		const searching = this.query.trim().length > 0;
+		const row = visibleRow(chain, (r) => {
+			const key = this.rowKeyOf.get(r);
+			return !searching && key !== undefined && this.folded.has(key);
+		});
+		const el = row ? this.rowEls.get(row) : undefined;
+		if (!el) return;
+		el.addClass('is-active');
+		el.setAttr('aria-current', 'location');
+		if (reveal) this.reveal(el);
+	}
+
+	/** Scrolls the panel so a row shows, only when the row is outside it. It does not move the focus. */
+	private reveal(el: HTMLElement): void {
+		const box = this.contentEl.getBoundingClientRect();
+		const head = this.contentEl.querySelector('.embed-outline-header')?.getBoundingClientRect().height ?? 0;
+		const r = el.getBoundingClientRect();
+		if (r.top < box.top + head) this.contentEl.scrollTop -= box.top + head - r.top;
+		else if (r.bottom > box.bottom) this.contentEl.scrollTop += r.bottom - box.bottom;
+	}
+
 	private draw(): void {
 		const el = this.contentEl;
 		const oldInput = el.querySelector<HTMLInputElement>('.embed-outline-search input');
 		const focused = oldInput === el.ownerDocument.activeElement;
 		const selection = oldInput?.selectionStart ?? null;
 		el.empty();
+		this.clearRows();
 		const o = this.outline;
 		if (!o) {
 			el.createDiv({ cls: 'embed-outline-empty', text: this.message || 'Open a note to see its outline.' });
@@ -135,7 +187,9 @@ export class EmbedOutlineView extends ItemView {
 			const fold = el.querySelector<HTMLButtonElement>('.embed-outline-buttons button');
 			if (fold) fold.disabled = this.query.trim().length > 0;
 			body.empty();
+			this.clearRows();
 			this.drawOutline(body, o);
+			this.paintActive(false);
 		};
 		input.addEventListener('input', update);
 		const reset = (): void => {
@@ -163,7 +217,7 @@ export class EmbedOutlineView extends ItemView {
 			return;
 		}
 		const searching = this.query.trim().length > 0;
-		const filtered = filterOutline(o.items, this.query, rowLabel);
+		const filtered = filterOutline(o.items, this.query, rowLabel, this.origins);
 		if (searching) {
 			el.createDiv({ cls: 'embed-outline-search-status', text: `${filtered.matches} ${filtered.matches === 1 ? 'match' : 'matches'}`, attr: { role: 'status', 'aria-live': 'polite' } });
 			if (!filtered.items.length) {
@@ -214,6 +268,9 @@ export class EmbedOutlineView extends ItemView {
 			const key = keys[i]!;
 			const node = parent.createDiv({ cls: 'embed-outline-item', attr: { 'data-kind': it.kind, role: 'treeitem' } });
 			const row = node.createDiv({ cls: 'embed-outline-row', attr: { tabindex: '0' } });
+			const source = this.origins.get(it) ?? it;
+			this.rowEls.set(source, row);
+			this.rowKeyOf.set(source, key);
 			const searching = this.query.trim().length > 0;
 			const folded = !searching && this.folded.has(key);
 			if (it.children.length) {

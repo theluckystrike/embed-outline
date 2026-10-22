@@ -1,5 +1,11 @@
 # embed-outline
 
+## 1.4.0
+
+### Minor Changes
+
+- The outline now marks the section you read as you scroll, also inside embedded notes, with the new setting "Highlight the current section".
+
 ## 1.3.0
 
 ### Minor Changes
