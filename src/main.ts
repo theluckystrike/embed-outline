@@ -3,7 +3,7 @@ import type { SponsorsManager } from './license/index';
 import { createGitHubSponsors } from './license/github-obsidian';
 import { readPlace, ScrollFollower } from './follow';
 import { buildOutline, chainWhere, headingKey, placeChain, sameRow, toMarkdownList, type Outline, type OutlineItem, type OutlineOptions } from './outline';
-import { SPONSORS, bindPro, isPro, onProChange, resetPro } from './pro';
+import { SPONSORS, bindPro, isPro, onProChange, resetPro, proNotice } from './pro';
 import { DEFAULT_SETTINGS, EmbedOutlineSettingTab, normalizeSettings, type EmbedOutlineSettings } from './settings';
 import { collect } from './source';
 import { EmbedOutlineView, VIEW_TYPE } from './view';
@@ -292,7 +292,7 @@ export default class EmbedOutlinePlugin extends Plugin {
 	/** Pro: copies the outline as a nested Markdown list with a link to each heading. */
 	async copyOutline(): Promise<string | null> {
 		if (!isPro()) {
-			new Notice('Copying the outline is a pro feature. Sponsor on GitHub, then sign in from the plugin settings.');
+			proNotice('Copying the outline is a pro feature.');
 			return null;
 		}
 		const o = this.last;

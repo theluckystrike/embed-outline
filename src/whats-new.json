@@ -1,10 +1,9 @@
 {
 	"id": "embed-outline",
 	"name": "Embed Outline",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"changes": [
-		"As you scroll, the outline marks the section at the top of the note, also inside embedded notes.",
-		"Turn the mark off with the new setting Highlight the current section."
+		"The Pro notice for copying the outline now has a Sponsor on GitHub button."
 	],
 	"tip": "Click a heading row in an embedded note to scroll to that heading inside the embed.",
 	"thanks": "Hi, I am Michael, a solo developer in Poland. Embed Outline is one of over 100 small plugins that I make. Thank you for using it.",

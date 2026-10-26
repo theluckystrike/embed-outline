@@ -1,7 +1,6 @@
 {
 	"name": "embed-outline",
-	"repository": {"type": "git", "url": "theluckystrike/embed-outline.git"},
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"private": true,
 	"description": "Shows the headings of embedded notes and callout titles in one outline, nested where each note is embedded.",
 	"main": "main.js",
