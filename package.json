@@ -1,6 +1,6 @@
 {
 	"name": "embed-outline",
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"private": true,
 	"description": "Shows the headings of embedded notes and callout titles in one outline, nested where each note is embedded.",
 	"main": "main.js",
