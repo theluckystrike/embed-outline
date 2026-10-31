@@ -4,11 +4,33 @@ Embed Outline shows one outline for a note and the notes it embeds. Each embedde
 
 The basic outline is free. Pro adds nested embeds, word counts, broken embed marks and a Markdown copy. It costs $5 a month or $15 once through GitHub Sponsors.
 
+## Quick start
+
+Note `Part one`:
+
+```markdown
+## Scene A
+
+## Scene B
+```
+
+Another note:
+
+```markdown
+# Book
+
+![[Part one]]
+
+## Notes
+```
+
+Select the Embed outline tab, or run the command "Open the outline panel". Each embedded note gets a row with the note name and its headings below it.
+
 ## Features
 
 <img src="https://raw.githubusercontent.com/theluckystrike/embed-outline/HEAD/docs/embed-outline.gif" alt="The outline of a manuscript note with its embedded chapters, a click into a chapter, then word counts with Pro" width="720">
 
-Pro costs $15 one time or $5 a month: [Sponsor](https://github.com/sponsors/theluckystrike?metadata_source=embed-outline) or [$15 one-time offer](https://github.com/sponsors/theluckystrike/sponsorships?tier_id=666162&metadata_source=embed-outline).
+Pro costs $15 one time or $5 a month: [Sponsor](https://github.com/sponsors/theluckystrike?frequency=one-time&metadata_source=embed-outline) or [$15 one-time offer](https://github.com/sponsors/theluckystrike/sponsorships?tier_id=666162&metadata_source=embed-outline).
 
 ### Embedded notes in the outline
 
@@ -103,7 +125,7 @@ The outline follows the last open note and updates after it or an embed changes.
 
 To get Pro:
 
-1. Sponsor through [GitHub Sponsors](https://github.com/sponsors/theluckystrike?metadata_source=embed-outline). A total payment of $15 meets the payment requirement for Pro without further payment. Sign-in and the checks below still apply.
+1. Sponsor through [GitHub Sponsors](https://github.com/sponsors/theluckystrike?frequency=one-time&metadata_source=embed-outline). A total payment of $15 meets the payment requirement for Pro without further payment. Sign-in and the checks below still apply.
 2. In settings, select "Sign in with GitHub" and enter the code at github.com/login/device.
 
 Refresh after a new sponsorship. Without Pro, the free outline keeps working.
@@ -141,7 +163,7 @@ The heading text must match after the app removes special characters such as `:`
 
 The core features are free. Pro features need a GitHub Sponsors sponsorship of theluckystrike: $5 a month or more, or $15 once. A total payment of $15 meets the payment requirement for Pro without further payment. Sign-in and the checks below still apply. Your notes stay readable and editable with or without Pro.
 
-GitHub handles the payment. Sponsor at https://github.com/sponsors/theluckystrike. You need no account for the free features. Pro needs the GitHub account that sponsors.
+GitHub handles the payment. Sponsor at https://github.com/sponsors/theluckystrike?frequency=one-time&metadata_source=embed-outline. You need no account for the free features. Pro needs the GitHub account that sponsors.
 
 Until you select "Sign in with GitHub" in the settings, Embed Outline makes no network requests. Sign in uses the GitHub device flow. Embed Outline sends its public client ID and the scope `read:user` to `https://github.com/login/device/code` and shows you a code. While you enter the code at https://github.com/login/device, it asks `https://github.com/login/oauth/access_token` every few seconds to check the sign-in status. The scope permits profile reads only. GitHub needs this access to show the sponsorship tier. It grants no repository scope and no write access.
 
