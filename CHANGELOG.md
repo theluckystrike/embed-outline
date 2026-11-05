@@ -1,5 +1,11 @@
 # embed-outline
 
+## 1.4.3
+
+### Patch Changes
+
+- The Pro notice of Embed Outline now says that one payment turns on Pro in every NoteMods plugin.
+
 ## 1.4.2
 
 ### Patch Changes

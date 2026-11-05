@@ -2,7 +2,7 @@
 
 Embed Outline shows one outline for a note and the notes it embeds. Each embedded note has its own row, with its headings below it. The outline also shows callout titles and headings in list items.
 
-The basic outline is free. Pro adds nested embeds, word counts, broken embed marks and a Markdown copy. It costs $5 a month or $15 once through GitHub Sponsors.
+The basic outline is free. Pro adds nested embeds, word counts, broken embed marks and a Markdown copy.
 
 ## Quick start
 
@@ -162,6 +162,8 @@ The heading text must match after the app removes special characters such as `:`
 ## Payment, account and network
 
 The core features are free. Pro features need a GitHub Sponsors sponsorship of theluckystrike: $5 a month or more, or $15 once. A total payment of $15 meets the payment requirement for Pro without further payment. Sign-in and the checks below still apply. Your notes stay readable and editable with or without Pro.
+
+[One payment turns on Pro in every NoteMods plugin](https://notemods.com/pro/).
 
 GitHub handles the payment. Sponsor at https://github.com/sponsors/theluckystrike?frequency=one-time&metadata_source=embed-outline. You need no account for the free features. Pro needs the GitHub account that sponsors.
 
