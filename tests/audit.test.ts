@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildOutline, outlineLines, toMarkdownList, type OutlineOptions } from '../src/outline';
 import { fakeSource } from './scan';
 import { GROWTH_LIMIT, pairedRatio } from './growth';
+import { budget } from './time-scale';
 
 const PRO: OutlineOptions = { callouts: true, listHeadings: true, maxDepth: 5, words: true, broken: true };
 const FREE: OutlineOptions = { callouts: true, listHeadings: true, maxDepth: 1, words: false, broken: false };
@@ -28,7 +29,7 @@ describe('audit fixes', () => {
 		const big = sourceOf(16);
 		const g = pairedRatio(() => buildOutline('N0.md', small, PRO), () => buildOutline('N0.md', big, PRO));
 		expect(g.ratio, `${g.text}, 16 notes against 8 notes`).toBeLessThan(GROWTH_LIMIT);
-	}, 120000);
+	}, budget(120000));
 
 	it('a section embed that starts on line 0 of the open note is not a loop', () => {
 		const files = { 'A.md': '# Intro\nHello there\n# Other\n![[#Intro]]' };
